@@ -1,0 +1,378 @@
+---
+stage: Security Platform
+group: Secrets Manager Application
+info: To determine the technical writer assigned to the Stage/Group associated with this page, see <https://handbook.gitlab.com/handbook/product/ux/technical-writing/#assignments>
+title: GitLab Secrets Manager
+ignore_in_report: true
+---
+
+{{< details >}}
+
+- Tier: Premium, Ultimate
+- Offering: GitLab.com, GitLab Self-Managed
+
+{{< /details >}}
+
+{{< history >}}
+
+- [Introduced](https://gitlab.com/groups/gitlab-org/-/epics/16319) in GitLab 18.3 [with the feature flags](../../../development/feature_flags/_index.md) `secrets_manager` and `ci_tanukey_ui`. Disabled by default.
+- Feature flag `ci_tanukey_ui` [removed](https://gitlab.com/gitlab-org/gitlab/-/issues/549940) in GitLab 18.4.
+- Made available to some users in a closed beta in GitLab 18.8.
+- Group secrets manager [introduced](https://gitlab.com/groups/gitlab-org/-/work_items/17904) and made available to closed beta users in 18.10 [with the feature flag](../../../development/feature_flags/_index.md) `group_secrets_manager`.
+- [Changed](https://gitlab.com/groups/gitlab-org/-/work_items/21731) from closed beta to public beta in GitLab 19.0.
+- [Changed](https://gitlab.com/groups/gitlab-org/-/work_items/10723) to limited availability on GitLab.com in GitLab 19.3.
+- Default read and write permissions for the Maintainer role in projects [introduced](https://gitlab.com/gitlab-org/gitlab/-/work_items/623437) in GitLab 19.4.
+- Secrets permissions for groups [removed](https://gitlab.com/gitlab-org/gitlab/-/work_items/623457) in GitLab 19.4. Group permissions no longer grant access, and the `GROUP` principal type, the `groupPath` argument of `PrincipalInput`, and the `group` field of `Principal` were removed from the GraphQL API. Grant permissions to users or roles instead.
+
+{{< /history >}}
+
+Use GitLab Secrets Manager to securely store and manage secrets and credentials for your projects and groups.
+
+Secrets represent sensitive information your CI/CD jobs need to function. Secrets could be access tokens,
+database credentials, private keys, or similar. Unlike CI/CD variables, which are always available to jobs by default,
+secrets must be explicitly requested by a job.
+
+GitLab Secrets Manager [consumes GitLab Credits](credit_usage.md).
+
+Share your feedback during the public beta in [feedback issue 598100](https://gitlab.com/gitlab-org/gitlab/-/work_items/598100).
+
+## Enable GitLab Secrets Manager
+
+When Secrets Manager is enabled for a top-level group, it is also available to all subgroups and projects in that group.
+
+On GitLab Self-Managed, an administrator must first [install and enable GitLab Secrets Manager](../../../administration/secrets_manager/_index.md) for the instance. After Secrets Manager is installed and enabled, you can enable it for specific groups and projects on the instance.
+
+### For GitLab.com
+
+{{< details >}}
+
+Status: Limited Availability
+
+{{< /details >}}
+
+- You can start a 30-day trial to try GitLab Secrets Manager with temporary evaluation credits. After the trial expires, GitLab Secrets Manager starts consuming GitLab credits. To avoid a service interruption, purchase a monthly commitment pool of credits or enable on-demand billing before the trial ends. For more information, see [GitLab Secrets Manager credit usage](credit_usage.md).
+- If you opted into the beta before August 21, 2026, your environment has a grace period with continued access until September 21, 2026. After the grace period, GitLab disables access. To continue access, start a trial before the grace period ends.
+
+Prerequisites:
+
+- You must have the Owner role for the top-level group.
+
+1. In the top bar, select **Search or go to** and find your top-level group.
+1. In the left sidebar, select **Secure** > **Secrets Manager**.
+1. Select **Start 30-day trial**.
+
+### For GitLab Self-Managed
+
+{{< details >}}
+
+- Status: Beta
+
+{{< /details >}}
+
+> [!note]
+> GitLab Secrets Manager is free during public beta. GitLab notifies you before general availability, so that you have time to start a trial or opt into on-demand billing for GitLab Credits.
+
+#### For a project
+
+Prerequisites:
+
+- You must have the Owner role for the project.
+
+To enable or disable GitLab Secrets Manager for a project:
+
+1. In the top bar, select **Search or go to** and find your project.
+1. In the left sidebar, select **Settings** > **General**.
+1. Expand **Visibility, project features, permissions**.
+1. Turn on the **GitLab Secrets Manager** toggle and wait for the secrets manager to be provisioned.
+
+   > [!warning]
+   > If you later disable the Secrets Manager for the project, all the project secrets are permanently deleted.
+   > These secrets cannot be recovered.
+
+Secrets defined for a project can only be accessed by pipelines from the same project.
+
+#### For a group
+
+{{< history >}}
+
+- Top-level group setting [moved](https://gitlab.com/gitlab-org/gitlab/-/issues/605581) from **Settings** > **General** to **Settings** > **Secure** in GitLab 19.4
+
+{{< /history >}}
+
+Prerequisites:
+
+- You must have the Owner role for the group.
+
+To enable or disable GitLab Secrets Manager for a group:
+
+1. In the top bar, select **Search or go to** and find your group.
+1. In the left sidebar:
+   - In a top-level group, select **Settings** > **Secure**.
+   - In a subgroup, select **Settings** > **General** and expand **Permissions and group features**.
+1. Turn on the **GitLab Secrets Manager** toggle and wait for the secrets manager to be provisioned.
+
+   > [!warning]
+   > If you later disable the Secrets Manager for the group, all the group secrets are permanently deleted.
+   > These secrets cannot be recovered.
+
+Secrets defined for a group can only be accessed by pipelines in a project directly under the group or in its subgroup hierarchy.
+
+## Define a secret
+
+You can add secrets to the secrets manager so that it can be used for secure CI/CD pipelines
+and workflows.
+
+1. In the top bar, select **Search or go to** and find your project or group.
+1. Select **Secure** > **Secrets manager**.
+1. Select **Add secret** and fill in the details:
+   - **Name**: Must be unique in the project.
+   - **Value**: Must be 10 KB (10,000 bytes) or less.
+   - **Description**: Maximum of 200 characters.
+   - **Environments**: Can be:
+     - **All (default)** (`*`)
+     - A specific [environment](../../environments/_index.md#types-of-environments).
+     - A [wildcard environment](../../environments/_index.md#limit-the-environment-scope-of-a-cicd-variable).
+   - **Branch**: Option only exists in project settings. Can be:
+     - A specific branch.
+     - A wildcard branch (must have the `*` character).
+   - **Protected**: Option only exists in group settings. Optional. Export secrets to pipelines running on protected branches only.
+   - **Rotation reminder**: Optional. Send an email reminder to rotate the secret after the set number of days.
+     Minimum 7 days.
+
+[By default](../../../administration/instance_limits.md#secrets-manager-limits),
+you can store a maximum of 100 secrets per project, and 500 per group. Secrets in a subgroup or
+in a member project do not count toward the limit of a parent group.
+
+After you create a secret:
+
+- You can use it in the pipeline configuration or in job scripts.
+- If you edit the secret, you can only overwrite the value with a new value.
+  You cannot retrieve the secret value through the UI. For more information, review the
+  [permissions for GitLab Secrets Manager](../../../user/permissions.md#project-secrets-manager).
+
+> [!warning]
+> The value of a secret is accessible to all CI/CD pipeline jobs running for the specific environment or branch
+> defined when the secret is created or updated. Ensure only users with permission to access
+> the value of these secrets can run jobs for the specified environment or branch.
+
+## Use secrets in job scripts
+
+By default, similar to [file type CI/CD variables](../../variables/_index.md#use-file-type-cicd-variables),
+a secret is made available in a job as a file with an associated environment variable:
+
+- The secret's key is the environment variable name.
+- The secret's value is saved to a temporary file. Unlike masked CI/CD variables, secrets can have spaces and newlines.
+- The path to the temporary file is the environment variable value.
+
+Use a secret in job scripts with commands that accept files as inputs, or optionally
+directly [use the secret as an environment variable](#use-a-secret-as-an-environment-variable-with-file-false).
+
+If a job outputs a secret's value, GitLab replaces the value in the job log with `[MASKED]`.
+
+### For project secrets
+
+Prerequisites:
+
+- GitLab Runner 19.0 or later.
+
+To access secrets stored in the Secret Manager for a project, use the [`secrets`](../../yaml/_index.md#secrets)
+and `gitlab_secrets_manager` keywords.
+
+For example:
+
+```yaml
+job:
+  secrets:
+    KUBE_CA_PEM:
+      gitlab_secrets_manager:
+        name: kube_cert
+  script:
+   - kubectl config set-cluster e2e --server="https://example.com" --certificate-authority="$KUBE_CA_PEM"
+```
+
+### For group secrets
+
+Prerequisites:
+
+- GitLab Runner 19.0 or later.
+
+To access secrets stored in the Secret Manager for a group:
+
+- Use the [`secrets`](../../yaml/_index.md#secrets) and `gitlab_secrets_manager` keywords.
+- Specify the group as a secret manager source by using the `source` field with the `group/` prefix followed by the `<full-path-to-group>`.
+
+For example:
+
+```yaml
+job:
+  secrets:
+    KUBE_CA_PEM:
+      gitlab_secrets_manager:
+        name: kube_cert
+        source: group/my-group/my-subgroup
+  script:
+   - kubectl config set-cluster e2e --server="https://example.com" --certificate-authority="$KUBE_CA_PEM"
+```
+
+### Use a secret as an environment variable with `file: false`
+
+To use a secret as an environment variable and not have it stored in a file,
+set `file: false` for the secret. For example:
+
+```yaml
+job:
+  secrets:
+    DEPLOY_SECRET:
+      gitlab_secrets_manager:
+        name: deploy_credentials
+      file: false
+  script:
+    - my_deploy_command --user username --pass $DEPLOY_SECRET
+```
+
+In this example, the secret is made available to the job as the `DEPLOY_SECRET` variable,
+which you can use like any other environment variable.
+
+## Manage secrets permissions
+
+### For a project
+
+Prerequisites:
+
+- You must have the Owner role for the project to manage the secrets permissions.
+- Users with the Maintainer role for the project can view the defined permissions.
+- The Secrets Manager must be enabled for the project.
+
+To update the secrets permissions for a project:
+
+1. In the top bar, select **Search or go to** and find your project.
+1. In the left sidebar, select **Settings** > **General**.
+1. Expand **Visibility, project features, permissions**.
+1. Under **GitLab Secrets Manager**, in the **User permissions** section:
+   - Select **Add** to add permissions rules for specific users or roles.
+   - You can set permission scopes to read metadata, read value, write (create & update), and delete secrets.
+
+For secrets managers enabled in GitLab 19.4 and later, users with the Maintainer role for the project have the
+read and write (create & update) permissions by default. Users with the Owner role can remove or change these default permissions.
+
+### For a group
+
+{{< history >}}
+
+- Top-level group setting [moved](https://gitlab.com/gitlab-org/gitlab/-/issues/605581) from **Settings** > **General** to **Settings** > **Secure** in GitLab 19.4
+
+{{< /history >}}
+
+Prerequisites:
+
+- You must have the Owner role for the group to manage the secrets permissions.
+  Only users with the Owner role for the group can view the defined permissions.
+- The Secrets Manager must be enabled for the group.
+
+To update the secrets permissions for a group:
+
+1. In the top bar, select **Search or go to** and find your group.
+1. In the left sidebar:
+   - In a top-level group, select **Settings** > **Secure**.
+   - In a subgroup, select **Settings** > **General** and expand **Permissions and group features**.
+1. Under **GitLab Secrets Manager**, in the **User permissions** section:
+   - Select **Add** to add permissions rules for specific users or roles.
+   - You can set permission scopes to read metadata, read value, write (create & update), and delete secrets.
+
+Users with the Owner role for the group always have permissions to perform all operations in the Secrets Manager.
+
+## Deletion of a project or group
+
+When you [delete a project](../../../user/project/working_with_projects.md#delete-a-project) or [delete a group](../../../user/group/_index.md#schedule-a-group-for-deletion) with secrets:
+
+- The secrets manager for the project or group is disabled and removed from the secrets storage engine.
+- All the secrets are permanently deleted.
+
+## Transfer of a project or group
+
+When you [transfer a project](../../../user/project/working_with_projects.md#transfer-a-project) or [transfer a group](../../../user/group/manage.md#transfer-a-group) with secrets:
+
+- The secrets defined for the project or group are not transferred to the project or group in its new namespace.
+- The secrets manager for the project or group is disabled and removed from the secrets storage engine.
+- All the secrets are permanently deleted.
+
+## Secret rotation notifications
+
+Users with the Owner role in the project receive an email notification to rotate a secret on the day specified in a secret's configuration.
+
+## Access secrets from non-CI/CD workloads
+
+Workloads that do not run as GitLab CI/CD jobs can read secrets through the Secrets Manager API.
+For more information, see [Access secrets from non-CI/CD workloads](non_cicd_access.md).
+
+## Related topics
+
+- [GitLab Secrets Manager credit usage](credit_usage.md)
+- [Secret Audit Tool for Variables](https://gitlab.com/guided-explorations/secrets-management/secret-audit-tool-for-variables):
+  A community tool that scans a GitLab group hierarchy for CI/CD variables whose names suggest they may hold credentials
+  (passwords, tokens, API keys, and similar). It generates an HTML report to help you identify
+  variables to migrate to GitLab Secrets Manager.
+
+## Troubleshooting
+
+### Error: `reading from Vault: api error: status code 403`
+
+When a CI/CD pipeline job attempts to fetch a secret, it might return this error:
+
+```plaintext
+ERROR: Job failed (system failure): resolving secrets: getting secret: get secret data: reading from Vault: api error: status code 403: 1 error occurred: * permission denied
+```
+
+This error happens when a job attempts to fetch a secret that does not exist or has been deleted.
+
+### Error: `inline auth JWT is required`
+
+When a CI/CD pipeline job attempts to fetch a secret, it might return this error:
+
+```plaintext
+ERROR: Job failed (system failure): resolving secrets: creating vault client: configuring inline auth: inline auth JWT is required
+```
+
+This error happens when the secrets manager instance has not been provisioned yet for the project or the group
+that the secret is expected to belong to. The runner cannot configure authentication because no secrets
+manager role exists yet.
+
+To resolve this error, enable the Secrets Manager
+for your project or group.
+
+Wait for provisioning to complete and create the secret before re-running the pipeline.
+
+### Error: `namespace does not have access to GitLab Secrets Manager`
+
+Jobs that request secrets from GitLab Secrets Manager fail with this error before a runner
+picks them up when the namespace does not have access to GitLab Secrets Manager.
+
+#### GitLab.com
+
+Possible causes on GitLab.com:
+
+- The trial has expired.
+- The group has no GitLab credits available.
+- On-demand billing is turned off.
+- The subscription grace period has expired.
+- The open beta has ended and the namespace did not opt in.
+
+To restore access for the top-level group, start a free trial or enable on-demand
+billing for the Secrets Manager. If the subscription has lapsed, renew it. For more
+information, see [GitLab Secrets Manager usage and billing](secrets_manager_billing.md).
+
+#### GitLab Self-Managed
+
+On GitLab Self-Managed, GitLab resolves access to Secrets Manager at the instance
+level, not per group.
+
+Possible causes:
+
+- The instance is using a trial license. Secrets Manager trials are only available with a paid subscription.
+- The Secrets Manager trial has expired.
+- The instance subscription does not include GitLab Secrets Manager.
+- The subscription grace period has expired.
+- For offline licenses, the license does not include an active GitLab Secrets Manager add-on.
+
+To restore access, ask an instance administrator to add GitLab Secrets Manager to the
+instance subscription. Instances with a paid subscription can also start a free trial.
