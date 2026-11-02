@@ -3,7 +3,7 @@ import logging
 
 import weaviate
 from weaviate.classes.config import Configure, DataType, Property, Tokenization
-from weaviate.classes.init import Auth
+from weaviate.classes.init import AdditionalConfig, Auth, Timeout
 from weaviate.classes.query import Filter, MetadataQuery
 from weaviate.util import generate_uuid5
 
@@ -18,7 +18,9 @@ class WeaviateStore:
         settings.require("weaviate_url", "weaviate_api_key")
         url = settings.weaviate_url if settings.weaviate_url.startswith("http") else f"https://{settings.weaviate_url}"
         self.client = weaviate.connect_to_weaviate_cloud(
-            cluster_url=url, auth_credentials=Auth.api_key(settings.weaviate_api_key)
+            cluster_url=url, 
+            auth_credentials=Auth.api_key(settings.weaviate_api_key),
+            additional_config=AdditionalConfig(timeout=Timeout(init=30, query=60, insert=120)),
         )
         self.name = settings.collection
         self._ensure_collection()

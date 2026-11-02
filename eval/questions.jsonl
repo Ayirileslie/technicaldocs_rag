@@ -1,0 +1,11 @@
+{"question": "How do I install the Acme CLI?", "expected_source": "acme-cli.md", "expected_section": "Installation", "must_contain": ["pip install acme-cli"]}
+{"question": "Which Python version does the CLI need?", "expected_source": "acme-cli.md", "expected_section": "Installation", "must_contain": ["3.9"]}
+{"question": "Where is the config file stored?", "expected_source": "acme-cli.md", "expected_section": "Configuration", "must_contain": [".acme/config.toml"]}
+{"question": "How can I override the token from the config file?", "expected_source": "acme-cli.md", "expected_section": "Configuration", "must_contain": ["ACME_TOKEN"]}
+{"question": "What does ERR_AUTH_EXPIRED mean and how do I fix it?", "expected_source": "acme-cli.md", "expected_section": "ERR_AUTH_EXPIRED", "must_contain": ["acme login --refresh"]}
+{"question": "I keep getting ERR_CONN_RESET, what should I change?", "expected_source": "acme-cli.md", "expected_section": "ERR_CONN_RESET", "must_contain": ["timeout_seconds"]}
+{"question": "How do I authenticate API requests?", "expected_source": "acme-api.md", "expected_section": "Authentication", "must_contain": ["Bearer"]}
+{"question": "How many requests per minute are allowed?", "expected_source": "acme-api.md", "expected_section": "Rate limits", "must_contain": ["100"]}
+{"question": "What header tells me how long to wait after a 429?", "expected_source": "acme-api.md", "expected_section": "Rate limits", "must_contain": ["Retry-After"]}
+{"question": "What is the maximum page size for list endpoints?", "expected_source": "acme-api.md", "expected_section": "Pagination", "must_contain": ["200"]}
+{"question": "How do I verify webhook signatures?", "expected_source": "acme-api.md", "expected_section": "Webhooks", "must_contain": ["X-Acme-Signature"]}
